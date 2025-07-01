@@ -1,26 +1,46 @@
 from dotenv import load_dotenv
-from pprint import pprint
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.text_rank import TextRankSummarizer
-import requests
-import os
+from postgres_connection import  db_connect,fetch_data
+import ollama
 load_dotenv()
 
-def get_summary(document_content="SSS Document"):
-    # Create parser and summarizer
-    parser = PlaintextParser.from_string(document_content, Tokenizer("arabic"))
-    summarizer = TextRankSummarizer()
-    summary = summarizer(parser.document, 5)
-    #print(summary)
+def get_summary(sql_query="Select id,text from documents_llama where id=36136"):
+
+    conn=db_connect()
+    data=fetch_data(conn,sql_query)
+    content = "\n".join([f"رقم المقال : {id}, النص: {text}" for id, text in data])
+    prompt = (
+        "أجب فقط باللغة العربية، ولا تستخدم أي لغة أخرى. "
+        "استخراج اهم النقاط من  المقالة التالية:\n\n"
+        f"{content}\n\n"
+        "الرجاء استخراج اهم النقاط من النص."
+    )
+    # Query LLaMA
+    response = ollama.chat(model='llama3', messages=[
+        {"role": "system", "content": "أنت مساعد ذكي يجيب فقط باللغة العربية، لا تستخدم الإنجليزية أبداً."},
+        {"role": "user", "content": prompt}
+    ])
+    summary= response['message']['content']
+    return summary
+
+def get_document_summary_by_content(document_content="SSS Document"):
+    content = document_content
+    prompt = (
+        "أجب فقط باللغة العربية، ولا تستخدم أي لغة أخرى. "
+        "استخراج اهم النقاط من  المقالة التالية:\n\n"
+        f"{content}\n\n"
+        "الرجاء استخراج اهم النقاط من النص."
+    )
+    # Query LLaMA
+    response = ollama.chat(model='llama3', messages=[
+        {"role": "system", "content": "أنت مساعد ذكي يجيب فقط باللغة العربية، لا تستخدم الإنجليزية أبداً."},
+        {"role": "user", "content": prompt}
+    ])
+    summary= response['message']['content']
     return summary
 
 if __name__ == '__main__':
-    text ="""
-    ذكرت وكالة الأنباء المحلية (جي.إن.إس) أن جماعة "جيش محمد" المتشددة أعلنت مسؤوليتها عن الهجوم. لكن ما هي منطقة كشمير المتنازع عليها بين الهند وباكستان؟ خلال العقود الست الماضية ظلت منطقة كشمير القريبة من جبال الهيمالايا محل نزاع بين الهند وباكستان. الجنة الملعونة دموع الفقراء في كشمير لماذا يلجأ الناس إلى أضرحة الصوفيين في "كشمير الهندية"؟ بالصور الطفولة المسروقة في كشمير فمنذ تقسيم الهند وقيام باكستان عام 1947 وقعت حربان بين البلدين حول منطقة كشمير ذات الأغلبية المسلمة والتي يطالب البلدان بالسيادة عليها. وتعد كشمير اليوم واحدة من أكثر المناطق المدججة بالسلاح في العالم، في ما تدير الصين أجزاء من الإقليم. تسلسل زمني لأهم الأحداث في كشمير' وزارة الدفاع الأمريكية تقول إن الفضلي كان أحد قادة تنظيم القاعدة القلائل الذين أُبلغوا مسبقا بشأن هجمات 9/11 في نيويورك عام  وقال المرصد السوري لحقوق الإنسان المعارض ، ومقره بريطانيا ، إن الغارات الجوية التي شنها التحالف الدولي بقيادة الولايات المتحدة استهدفت مواقع لتنظيم " الدولة الإسلامية " في محافظة دير الزور .وأضاف المرصد أن الغارات أسفرت أيضا عن تدمير عدد من المنازل في المنطقة . وقال رامي عبد الرحمن ، مدير المرصد ، لبي بي سي إن الضربات الجوية استهدفت أيضا مواقع للتنظيم في بلدة تل أبيض . مواضيع قد تهمك نهاية وأضاف أن " الغارات دمرت أيضا عددا من المباني في منطقة تل ابيض " ، بحسب ما نقلته وكالة الأنباء السورية الرسمية ( سانا ) . ولم يتسن التأكد من صحة هذه الأنباء من مصادر مستقلة . وكان المرصد قد قال في وقت سابق إن طائرات التحالف شنت سلسلة غارات جوية على مناطق خاضعة لسيطرة المعارضة المسلحة في مدينة الرقة ، شمالي سوريا ، ما أسفر عن مقتل أكثر من 50 شخصا ، بينهم نساء وأطفال . وفي وقت لاحق ، قال المرصد إن الطيران الحربي السوري شن غارات على مواقع لمسلحي المعارضة في ريف دمشق ، ردا على هجوم شنه مسلحو المعارضة على بلدة عين العرب ( كوباني ) ، الواقعة على الحدود مع تركيا . وكانت القوات الحكومية السورية قد تمكنت من استعادة السيطرة على عدة مناطق في شمال شرقي البلاد ، بعد معارك عنيفة مع مسلحي المعارضة ، الذين يسيطرون على مساحات واسعة من الأراضي السورية . وقالت وكالة رويترز للأنباء إن الجيش السوري وحلفاءه شنوا سلسلة من الهجمات الجوية على المناطق التي تسيطر عليها المعارضة . ونقلت الوكالة عن مصدر عسكري سوري قوله إن " وحدات حماية الشعب الكردية " قصفت مواقع للمسلحين الأكراد في محيط بلدة كفر زيتا ، التي تقع على بعد نحو 50 كيلومترا إلى الشمال الشرقي من العاصمة السورية دمشق .
-    """
-    summary = get_summary(text)
-    for sentence in summary:
-        print(sentence)
+    sql_query ="Select id,text from documents_llama where id=29016"
+    summary = get_summary(sql_query)
+    print(summary)
 
 

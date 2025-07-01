@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from pprint import pprint
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
 from datasets import load_dataset
-from arabert.preprocess import ArabertPreprocessor
+#from arabert.preprocess import ArabertPreprocessor
 import requests
 import os
 load_dotenv()

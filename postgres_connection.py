@@ -11,11 +11,11 @@ import os
 
 def connect(db_name,db_user,db_password,db_host,db_port):
     conn = psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
+        host=db_host,
+        port=db_port
     )
     return conn
 
@@ -78,10 +78,10 @@ def cosine_similarity_search(query_embedding):
     conn = db_connect()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT text, 1 - (embedding <=> %s::vector) AS similarity
-        FROM documents_new
+        SELECT Id, text, 1 - (embedding <=> %s::vector) AS similarity
+        FROM documents_llama
         ORDER BY similarity DESC
-        LIMIT 3;
+        LIMIT 10;
     """, (query_embedding,))
     return cursor.fetchall()
 
@@ -90,10 +90,11 @@ def add_documents(conn,sentence,embedding):
     cursor = conn.cursor()
     doc = {
         "text": sentence,
-        "embedding": embedding.tolist()
+        "embedding": embedding   #.tolist()
     }
-    # Insert into MongoDB
-    cursor.execute("INSERT INTO documents_new (text, embedding) VALUES (%s, %s)", (sentence, embedding.tolist()))
+
+    # Insert into postgreSQL DB
+    cursor.execute("INSERT INTO documents_llama (text, embedding) VALUES (%s, %s)", (sentence, embedding))
     conn.commit()
     cursor.close()
     #print("Embedding saved successfully!")
